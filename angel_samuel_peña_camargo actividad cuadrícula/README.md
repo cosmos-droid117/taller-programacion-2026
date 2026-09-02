@@ -41,4 +41,4 @@ Para ejecutar el programa, abrir una terminal en la carpeta del proyecto y escri
 
 ## Archivos 
 * main.py: código principal del programa.
-* * README.md: documentación del proyecto.
+* README.md: documentación del proyecto.
