@@ -39,5 +39,6 @@ No requiere librerías externas. Se necesita tener Python instalado.
 
 Para ejecutar el programa, abrir una terminal en la carpeta del proyecto y escribir:
 
-```bash
-python main.py
+## Archivos 
+* main.py: código principal del programa.
+* * README.md: documentación del proyecto.
