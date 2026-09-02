@@ -33,12 +33,17 @@ La aplicación cumple con los siguientes requisitos:
 - **RF09.** Permitir reiniciar la cuadrícula y devolver todos los círculos a su estado inicial.
 - **RF10.** Mostrar las coordenadas ingresadas por el usuario.
 
+## Archivos 
+* main.py: código principal del programa.
+* README.md: documentación del proyecto.
+
 ## Instalación y ejecución
 
 No requiere librerías externas. Se necesita tener Python instalado.
 
 Para ejecutar el programa, abrir una terminal en la carpeta del proyecto y escribir:
 
-## Archivos 
-* main.py: código principal del programa.
-* README.md: documentación del proyecto.
+```bash
+python main.py
+
+
