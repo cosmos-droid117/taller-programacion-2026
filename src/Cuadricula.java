@@ -1,7 +1,6 @@
 public class Cuadricula {
     private int x;
     private int y;
-    int[][] cuadricula = new int[x][y];
 
     public Cuadricula(int x, int y) {
         this.x = x;
