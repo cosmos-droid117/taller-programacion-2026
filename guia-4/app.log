@@ -1,0 +1,53 @@
+2026-09-11 08:31:57 INFO GET / - Petición recibida
+2026-09-11 08:31:57 INFO GET / - Finalizada con status 404 (0.69 ms) [ERROR]
+2026-09-11 08:31:57 INFO GET /favicon.ico - Petición recibida
+2026-09-11 08:31:57 INFO GET /favicon.ico - Finalizada con status 404 (0.59 ms) [ERROR]
+2026-09-11 08:32:11 INFO GET / - Petición recibida
+2026-09-11 08:32:11 INFO GET / - Finalizada con status 404 (0.81 ms) [ERROR]
+2026-09-11 08:32:11 INFO GET /favicon.ico - Petición recibida
+2026-09-11 08:32:11 INFO GET /favicon.ico - Finalizada con status 404 (0.66 ms) [ERROR]
+2026-09-11 08:32:58 INFO GET /docs - Petición recibida
+2026-09-11 08:32:58 INFO GET /docs - Finalizada con status 200 (2.19 ms) [INFO]
+2026-09-11 08:32:58 INFO GET /swagger-static/swagger-ui.css - Petición recibida
+2026-09-11 08:32:58 INFO GET /swagger-static/swagger-ui-bundle.js - Petición recibida
+2026-09-11 08:32:58 INFO GET /swagger-static/swagger-ui-bundle.js - Finalizada con status 200 (116.96 ms) [INFO]
+2026-09-11 08:32:58 INFO GET /swagger-static/swagger-ui.css - Finalizada con status 200 (120.98 ms) [INFO]
+2026-09-11 08:32:58 INFO GET /openapi.json - Petición recibida
+2026-09-11 08:32:58 INFO GET /openapi.json - Finalizada con status 200 (6.62 ms) [INFO]
+2026-09-11 09:04:13 INFO GET /productos/9999 - Petición recibida
+2026-09-11 09:04:13 ERROR GET /productos/9999 - Producto no encontrado
+2026-09-11 09:04:13 INFO GET /productos/9999 - Finalizada con status 404 (278.68 ms) [ERROR]
+2026-09-11 09:04:13 INFO POST /productos - Petición recibida
+2026-09-11 09:04:13 ERROR POST /productos - Error de validación: [{'type': 'missing', 'loc': ('body', 'categoria'), 'msg': 'Field required', 'input': {'id': 99, 'nombre': 'Teclado'}}, {'type': 'missing', 'loc': ('body', 'precio'), 'msg': 'Field required', 'input': {'id': 99, 'nombre': 'Teclado'}}, {'type': 'missing', 'loc': ('body', 'stock'), 'msg': 'Field required', 'input': {'id': 99, 'nombre': 'Teclado'}}]
+2026-09-11 09:04:13 INFO POST /productos - Finalizada con status 422 (461.28 ms) [ERROR]
+2026-09-11 09:04:13 INFO GET /productos/500 - Petición recibida
+2026-09-11 09:04:13 ERROR GET /productos/500 - Fallo simulado de conexión con la base de datos
+2026-09-11 09:04:13 ERROR GET /productos/500 - Error interno: Error simulado: no fue posible conectar con la base de datos
+2026-09-11 09:04:13 INFO GET /metricas - Petición recibida
+2026-09-11 09:04:13 INFO GET /metricas - Finalizada con status 200 (0.79 ms) [INFO]
+2026-09-11 15:36:38 INFO GET /productos - Petición recibida
+2026-09-11 15:36:38 INFO GET /productos - Consulta exitosa
+2026-09-11 15:36:38 INFO GET /productos - Finalizada con status 200 (2.95 ms) [INFO]
+2026-09-11 15:36:42 INFO GET /productos - Petición recibida
+2026-09-11 15:36:42 INFO GET /productos - Consulta exitosa
+2026-09-11 15:36:42 INFO GET /productos - Finalizada con status 200 (1.55 ms) [INFO]
+2026-09-11 15:36:55 INFO GET /productos - Petición recibida
+2026-09-11 15:36:55 INFO GET /productos - Consulta exitosa
+2026-09-11 15:36:55 INFO GET /productos - Finalizada con status 200 (1.15 ms) [INFO]
+2026-09-11 15:36:58 INFO GET /productos - Petición recibida
+2026-09-11 15:36:58 INFO GET /productos - Consulta exitosa
+2026-09-11 15:36:58 INFO GET /productos - Finalizada con status 200 (1.86 ms) [INFO]
+2026-09-11 15:37:24 INFO GET /productos/9999 - Petición recibida
+2026-09-11 15:37:24 ERROR GET /productos/9999 - Producto no encontrado
+2026-09-11 15:37:24 INFO GET /productos/9999 - Finalizada con status 404 (1.27 ms) [ERROR]
+2026-09-11 15:42:45 INFO GET /metricas - Petición recibida
+2026-09-11 15:42:45 INFO GET /metricas - Finalizada con status 200 (1.04 ms) [INFO]
+2026-09-11 16:11:40 INFO POST /productos - Petición recibida
+2026-09-11 16:11:40 ERROR POST /productos - Error de validación: [{'type': 'missing', 'loc': ('body', 'precio'), 'msg': 'Field required', 'input': {'nombre': 'Mouse Gamer', 'categoria': 'string', 'stock': 10, 'id': 5}}]
+2026-09-11 16:11:40 INFO POST /productos - Finalizada con status 422 (17.39 ms) [ERROR]
+2026-09-11 16:16:44 INFO GET /productos - Petición recibida
+2026-09-11 16:16:44 INFO GET /productos - Consulta exitosa
+2026-09-11 16:16:44 INFO GET /productos - Finalizada con status 200 (2.32 ms) [INFO]
+2026-09-11 16:17:47 INFO GET /productos/500 - Petición recibida
+2026-09-11 16:17:47 ERROR GET /productos/500 - Fallo simulado de conexión con la base de datos
+2026-09-11 16:17:47 ERROR GET /productos/500 - Error interno: Error simulado: no fue posible conectar con la base de datos
