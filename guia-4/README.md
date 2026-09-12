@@ -18,15 +18,17 @@ API REST de gestión de productos (construida en una guía anterior) a la que se
 
 1. Crear el entorno virtual e instalar dependencias:
 
+```bash
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
+```
 
 2. Levantar el servidor:
 
+```bash
 python -m uvicorn main:app --reload
-
+```
 
 3. Abrir la documentación interactiva en `http://127.0.0.1:8000/docs`
 
