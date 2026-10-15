@@ -16,6 +16,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest httpx
+        run: pip install -r requirements.txt pytest httpx openapi-spec-validator
       - name: Run tests
         run: pytest -v
