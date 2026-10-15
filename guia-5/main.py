@@ -1,6 +1,6 @@
 import time
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse
@@ -8,10 +8,12 @@ from fastapi.staticfiles import StaticFiles
 from swagger_ui_bundle import swagger_ui_path
 from typing import List
 
-from models import Producto, ProductoCrear, ProductoActualizar
+from models import AIConsulta, AIRespuesta, Producto, ProductoActualizar, ProductoCrear
 from database import productos_db
 from logging_config import logger
 from metrics import metricas
+from llm_client import GeminiClient, LLMError, registrar_llamada
+from rag import construir_prompt, recuperar_productos
 
 app = FastAPI(
     title="API de Productos",
@@ -169,3 +171,36 @@ def eliminar_producto(id: int):
         )
     del productos_db[id]
     logger.info(f"DELETE /productos/{id} - Producto eliminado")
+
+# ---------------------------------------------------------------------------
+# ENDPOINT DE IA: consulta un LLM con contexto recuperado (RAG)
+# ---------------------------------------------------------------------------
+def get_llm_client() -> GeminiClient:
+    return GeminiClient()
+
+
+@app.post(
+    "/api/v1/ai",
+    response_model=AIRespuesta,
+    tags=["AI"],
+    summary="Ask the LLM about the product catalog",
+    description="Builds a prompt with the chosen technique, optionally adds matching products as context (RAG) and queries the LLM.",
+)
+def consultar_ai(consulta: AIConsulta, llm: GeminiClient = Depends(get_llm_client)):
+    contexto = recuperar_productos(consulta.pregunta, list(productos_db.values())) if consulta.usar_rag else []
+    prompt = construir_prompt(consulta.tecnica, consulta.pregunta, contexto)
+    base = {"pregunta": consulta.pregunta, "tecnica": consulta.tecnica, "usar_rag": consulta.usar_rag, "prompt": prompt}
+    try:
+        resultado = llm.generar(prompt)
+    except LLMError as exc:
+        registrar_llamada({**base, "error": type(exc).__name__})
+        logger.error(f"POST /api/v1/ai - {type(exc).__name__}")
+        raise HTTPException(status_code=exc.status_code, detail=exc.detalle)
+    registrar_llamada({**base, **resultado})
+    logger.info(f"POST /api/v1/ai - OK ({consulta.tecnica}, rag={consulta.usar_rag})")
+    return AIRespuesta(
+        tecnica=consulta.tecnica,
+        usar_rag=consulta.usar_rag,
+        productos_contexto=[p.id for p in contexto],
+        **resultado,
+    )
