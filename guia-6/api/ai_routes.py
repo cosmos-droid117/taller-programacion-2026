@@ -3,8 +3,8 @@ from fastapi import APIRouter, Body, Depends
 from api.dependencies import get_ai_service
 from api.responses import RESPUESTA_422, error as _error
 from application.ai_service import AIService
-from logging_config import logger
-from models import AIConsulta, AIRespuesta
+from observability.logging_config import logger
+from api.schemas import AIConsulta, AIRespuesta
 
 router = APIRouter()
 

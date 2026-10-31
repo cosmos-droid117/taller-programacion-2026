@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
-
+from observability.logging_config import logger
 from domain.entities import Producto
 
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from domain.exceptions import LLMError, LLMRateLimit, LLMSinClave, LLMTimeout
-from logging_config import logger
+from observability.logging_config import logger
 
 _MAPA = (
     (LLMTimeout, 504, "The LLM provider did not respond in time"),

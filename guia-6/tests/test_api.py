@@ -3,8 +3,7 @@ import copy
 import pytest
 from fastapi.testclient import TestClient
 
-from database import productos_db
-from main import app
+from main import app, productos_db
 
 client = TestClient(app)
 

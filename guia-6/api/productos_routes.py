@@ -5,8 +5,9 @@ from fastapi import APIRouter, Body, Depends, status
 from api.dependencies import get_producto_service
 from api.responses import RESPUESTA_404, RESPUESTA_422, RESPUESTA_500, error
 from application.producto_service import ProductoService
-from logging_config import logger
-from models import Producto, ProductoActualizar, ProductoCrear
+from observability.logging_config import logger
+from api.schemas import ProductoActualizar, ProductoCrear
+from domain.entities import Producto
 
 router = APIRouter()
 

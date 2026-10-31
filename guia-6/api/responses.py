@@ -1,4 +1,4 @@
-from models import ErrorResponse, ValidationErrorResponse
+from api.schemas import ErrorResponse, ValidationErrorResponse
 
 
 def error(descripcion: str, ejemplo: str) -> dict:

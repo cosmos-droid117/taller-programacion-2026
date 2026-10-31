@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from domain.exceptions import ProductoDuplicado, ProductoNoEncontrado
-from logging_config import logger
+from observability.logging_config import logger
 
 
 def registrar_manejadores_dominio(app: FastAPI) -> None:

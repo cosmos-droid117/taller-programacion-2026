@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-from domain.entities import Producto, ProductoBase
+from domain.entities import ProductoBase
 
 class ProductoCrear(ProductoBase):
     """Data required to create a product. The client assigns the id."""

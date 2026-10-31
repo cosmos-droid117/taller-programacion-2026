@@ -1,3 +1,4 @@
+from observability.logging_config import logger
 class DominioError(Exception):
     """Base de los errores de negocio. No conoce HTTP: la capa api los traduce."""
 
