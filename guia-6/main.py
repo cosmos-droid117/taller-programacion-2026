@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 
 from api.ai_routes import router as ai_router
+from api.analisis_routes import router as analisis_router
+from api.dashboard import router as dashboard_router
+from api.datos_error_handlers import registrar_manejadores_datos
 from api.docs import registrar_docs
 from api.error_handlers import registrar_manejadores_dominio
 from api.global_handlers import registrar_manejadores_globales
@@ -8,11 +11,15 @@ from api.llm_error_handlers import registrar_manejadores_llm
 from api.observabilidad import registrar_observabilidad
 from api.productos_routes import router as productos_router
 from application.ai_service import AIService
+from application.analisis_service import AnalisisService
 from application.producto_service import ProductoService
 from domain.entities import Producto
 from infrastructure.gemini_client import GeminiClient
 from infrastructure.jsonl_llamada_log import JsonlLlamadaLog
 from infrastructure.memory_producto_repository import MemoriaProductoRepository
+from infrastructure.datos_abiertos_adapters import DaneAdapter, DatosGovCoAdapter
+from infrastructure.duckdb_analitica import DuckDBAnalitica
+from infrastructure.resilience import CircuitBreaker
 
 DESCRIPTION = """
 REST API to manage a product catalog (CRUD) with observability (logs and metrics)
@@ -35,6 +42,7 @@ app = FastAPI(
         {"name": "Products", "description": "Create, read, update and delete products."},
         {"name": "Observability", "description": "Runtime metrics of the API."},
         {"name": "AI", "description": "Questions about the catalog answered by an LLM."},
+        {"name": "Open Data", "description": "Statistics computed with DuckDB over Colombian open data (datos.gov.co)."},
     ],
 )
 
@@ -52,10 +60,21 @@ producto_service = ProductoService(MemoriaProductoRepository(productos_db))
 app.state.producto_service = producto_service
 app.state.ai_service = AIService(GeminiClient(), producto_service, JsonlLlamadaLog())
 
+   # Datos abiertos: un circuit breaker POR API, creado una sola vez (su estado vive en el proceso)
+analitica = DuckDBAnalitica()
+app.state.analisis_services = {
+    "secop": AnalisisService("SECOP II", DatosGovCoAdapter(CircuitBreaker("SECOP II")), analitica,
+                            "departamento_entidad", "precio_base"),
+    "dane": AnalisisService("DIVIPOLA (DANE)", DaneAdapter(CircuitBreaker("DIVIPOLA")), analitica, "dpto"),
+   }
+
 registrar_docs(app)
 registrar_observabilidad(app)
 registrar_manejadores_globales(app)
 registrar_manejadores_dominio(app)
 registrar_manejadores_llm(app)
+registrar_manejadores_datos(app)
 app.include_router(productos_router)
 app.include_router(ai_router)
+app.include_router(analisis_router)
+app.include_router(dashboard_router)
