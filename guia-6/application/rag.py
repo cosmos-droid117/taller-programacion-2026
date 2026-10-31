@@ -2,7 +2,7 @@ import re
 import unicodedata
 from typing import List
 
-from models import Producto
+from domain.entities import Producto
 
 STOPWORDS = {
     "que", "los", "las", "del", "con", "por", "para", "una", "uno", "unos", "unas",

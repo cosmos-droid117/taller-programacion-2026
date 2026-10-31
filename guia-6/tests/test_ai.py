@@ -1,9 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
-import main
-from llm_client import LLMRateLimit, LLMSinClave, LLMTimeout
-from main import app, get_llm_client
+from api.dependencies import get_ai_service
+from application.ai_service import AIService
+from domain.exceptions import LLMRateLimit, LLMSinClave, LLMTimeout
+from main import app
 
 client = TestClient(app)
 
@@ -32,16 +33,26 @@ class LLMConError:
         raise self.error
 
 
+class LogFalso:
+    def registrar(self, registro):
+        pass
+
+
+def _usar(llm):
+    app.dependency_overrides[get_ai_service] = lambda: AIService(
+        llm, app.state.producto_service, LogFalso()
+    )
+
+
 @pytest.fixture(autouse=True)
-def aislar(monkeypatch):
-    monkeypatch.setattr(main, "registrar_llamada", lambda registro: None)
+def aislar():
     yield
     app.dependency_overrides.clear()
 
 
 def test_endpoint_ai_con_rag():
     falso = LLMFalso()
-    app.dependency_overrides[get_llm_client] = lambda: falso
+    _usar(falso)
     r = client.post(
         "/api/v1/ai",
         json={"pregunta": "¿Cuánto cuestan 2 laptops?", "tecnica": "few-shot", "usar_rag": True},
@@ -56,7 +67,7 @@ def test_endpoint_ai_con_rag():
 
 @pytest.mark.parametrize("error, codigo", [(LLMTimeout(), 504), (LLMRateLimit(), 429), (LLMSinClave(), 503)])
 def test_endpoint_ai_errores_del_proveedor(error, codigo):
-    app.dependency_overrides[get_llm_client] = lambda: LLMConError(error)
+    _usar(LLMConError(error))
     r = client.post("/api/v1/ai", json={"pregunta": "¿Hay laptops?"})
     assert r.status_code == codigo
 

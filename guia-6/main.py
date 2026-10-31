@@ -1,28 +1,25 @@
 import time
 
-from fastapi import Body, Depends, FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from swagger_ui_bundle import swagger_ui_path
-from typing import List
 
-from models import (
-    AIConsulta,
-    AIRespuesta,
-    ErrorResponse,
-    Producto,
-    ProductoActualizar,
-    ProductoCrear,
-    ValidationErrorResponse,
-)
 from database import productos_db
 from logging_config import logger
 from metrics import metricas
-from llm_client import GeminiClient, LLMError, registrar_llamada
-from rag import construir_prompt, recuperar_productos
+from api.ai_routes import router as ai_router
+from api.error_handlers import registrar_manejadores_dominio
+from api.llm_error_handlers import registrar_manejadores_llm
+from api.productos_routes import router as productos_router
+from application.ai_service import AIService
+from application.producto_service import ProductoService
+from infrastructure.gemini_client import GeminiClient
+from infrastructure.jsonl_llamada_log import JsonlLlamadaLog
+from infrastructure.memory_producto_repository import MemoriaProductoRepository
 
 DESCRIPTION = """
 REST API to manage a product catalog (CRUD) with observability (logs and metrics)
@@ -84,7 +81,14 @@ def openapi_personalizado():
 
 app.openapi = openapi_personalizado
 
-app.mount("/swagger-static", StaticFiles(directory=swagger_ui_path), name="swagger-static")
+# Composición: aquí (y solo aquí) se eligen las implementaciones concretas
+producto_service = ProductoService(MemoriaProductoRepository(productos_db))
+app.state.producto_service = producto_service
+app.state.ai_service = AIService(GeminiClient(), producto_service, JsonlLlamadaLog())
+registrar_manejadores_dominio(app)
+registrar_manejadores_llm(app)
+app.include_router(productos_router)
+app.include_router(ai_router)
 
 
 @app.get("/docs", include_in_schema=False)
@@ -151,43 +155,6 @@ async def manejador_generico(request: Request, exc: Exception):
 
 
 # ---------------------------------------------------------------------------
-# DOCUMENTACIÓN OPENAPI: respuestas de error reutilizables
-# ---------------------------------------------------------------------------
-def _error(descripcion: str, ejemplo: str) -> dict:
-    return {
-        "model": ErrorResponse,
-        "description": descripcion,
-        "content": {"application/json": {"example": {"detail": ejemplo}}},
-    }
-
-
-RESPUESTA_404 = {404: _error("Product not found", "No product with id 999 exists")}
-RESPUESTA_422 = {
-    422: {
-        "model": ValidationErrorResponse,
-        "description": "Invalid or incomplete input data",
-        "content": {
-            "application/json": {
-                "example": {
-                    "detail": "Invalid or incomplete input data",
-                    "errors": [
-                        {
-                            "type": "greater_than",
-                            "loc": ["body", "precio"],
-                            "msg": "Input should be greater than 0",
-                            "input": -5,
-                            "ctx": {"gt": 0.0},
-                        }
-                    ],
-                }
-            }
-        },
-    }
-}
-RESPUESTA_500 = {500: _error("Unexpected server error", "Internal server error")}
-
-
-# ---------------------------------------------------------------------------
 # ENDPOINT DE OBSERVABILIDAD: expone las métricas acumuladas
 # ---------------------------------------------------------------------------
 @app.get(
@@ -224,207 +191,6 @@ def obtener_metricas():
 # ---------------------------------------------------------------------------
 # ENDPOINTS DE PRODUCTOS
 # ---------------------------------------------------------------------------
-@app.get(
-    "/productos",
-    response_model=List[Producto],
-    tags=["Products"],
-    operation_id="list_products",
-    summary="List all products",
-    description="Returns every product currently stored in the catalog.",
-)
-def obtener_productos():
-    logger.info("GET /productos - Consulta exitosa")
-    return list(productos_db.values())
 
-
-@app.get(
-    "/productos/{id}",
-    response_model=Producto,
-    tags=["Products"],
-    operation_id="get_product",
-    summary="Get a product by id",
-    description=(
-        "Returns a single product. Product id `500` is reserved: it simulates a database "
-        "connection failure and always answers with HTTP 500 (used for the controlled-failure tests)."
-    ),
-    responses={**RESPUESTA_404, **RESPUESTA_500},
-)
-def obtener_producto(id: int):
-    if id == 500:
-        logger.error(f"GET /productos/{id} - Fallo simulado de conexión con la base de datos")
-        raise RuntimeError("Error simulado: no fue posible conectar con la base de datos")
-
-    producto = productos_db.get(id)
-    if producto is None:
-        logger.error(f"GET /productos/{id} - Producto no encontrado")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No product with id {id} exists",
-        )
-    logger.info(f"GET /productos/{id} - Consulta exitosa")
-    return producto
-
-
-@app.post(
-    "/productos",
-    response_model=Producto,
-    status_code=status.HTTP_201_CREATED,
-    tags=["Products"],
-    operation_id="create_product",
-    summary="Create a product",
-    description="Registers a new product. The client chooses the `id`, which must not exist yet.",
-    responses={
-        400: _error("A product with that id already exists", "A product with id 1 already exists"),
-        **RESPUESTA_422,
-    },
-)
-def crear_producto(
-    producto: ProductoCrear = Body(
-        ...,
-        openapi_examples={
-            "valid": {
-                "summary": "Valid product",
-                "description": "Creates a new product (returns 201).",
-                "value": {"id": 10, "nombre": "Teclado mecánico", "categoria": "Tecnología", "precio": 120000, "stock": 8},
-            },
-            "duplicate_id": {
-                "summary": "Duplicate id",
-                "description": "The id 1 already exists in the seed data (returns 400).",
-                "value": {"id": 1, "nombre": "Otro producto", "categoria": "Tecnología", "precio": 1000, "stock": 1},
-            },
-            "invalid_price": {
-                "summary": "Invalid price",
-                "description": "The price must be greater than 0 (returns 422).",
-                "value": {"id": 11, "nombre": "Cable", "categoria": "Accesorios", "precio": -5, "stock": 3},
-            },
-        },
-    ),
-):
-    if producto.id in productos_db:
-        logger.error(f"POST /productos - Ya existe un producto con id {producto.id}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"A product with id {producto.id} already exists",
-        )
-    nuevo_producto = Producto(**producto.model_dump())
-    productos_db[producto.id] = nuevo_producto
-    logger.info(f"POST /productos - Producto {producto.id} registrado")
-    return nuevo_producto
-
-
-@app.put(
-    "/productos/{id}",
-    response_model=Producto,
-    tags=["Products"],
-    operation_id="update_product",
-    summary="Update a product",
-    description="Replaces all the fields of an existing product. The `id` is taken from the URL and cannot be changed.",
-    responses={**RESPUESTA_404, **RESPUESTA_422},
-)
-def actualizar_producto(
-    id: int,
-    datos: ProductoActualizar = Body(
-        ...,
-        openapi_examples={
-            "price_change": {
-                "summary": "Change price and stock",
-                "value": {"nombre": "Laptop", "categoria": "Tecnología", "precio": 2300000, "stock": 7},
-            }
-        },
-    ),
-):
-    if id not in productos_db:
-        logger.error(f"PUT /productos/{id} - Producto no encontrado")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No product with id {id} exists",
-        )
-    producto_actualizado = Producto(id=id, **datos.model_dump())
-    productos_db[id] = producto_actualizado
-    logger.info(f"PUT /productos/{id} - Producto actualizado")
-    return producto_actualizado
-
-
-@app.delete(
-    "/productos/{id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    tags=["Products"],
-    operation_id="delete_product",
-    summary="Delete a product",
-    description="Permanently removes a product. Returns no content when it succeeds.",
-    responses=RESPUESTA_404,
-)
-def eliminar_producto(id: int):
-    if id not in productos_db:
-        logger.error(f"DELETE /productos/{id} - Producto no encontrado")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No product with id {id} exists",
-        )
-    del productos_db[id]
-    logger.info(f"DELETE /productos/{id} - Producto eliminado")
-
-
-# ---------------------------------------------------------------------------
-# ENDPOINT DE IA: consulta un LLM con contexto recuperado (RAG)
-# ---------------------------------------------------------------------------
-def get_llm_client() -> GeminiClient:
-    return GeminiClient()
-
-
-@app.post(
-    "/api/v1/ai",
-    response_model=AIRespuesta,
-    tags=["AI"],
-    operation_id="ask_ai",
-    summary="Ask the LLM about the product catalog",
-    description=(
-        "Builds a prompt with the chosen technique (`zero-shot`, `few-shot` or `cot`), optionally adds the "
-        "catalog products that match the question as context (RAG) and queries the LLM. If no product "
-        "matches, the whole catalog is sent. Every call is logged to `llamadas_llm.jsonl`."
-    ),
-    responses={
-        429: _error("LLM rate limit reached", "LLM rate limit reached, try again later"),
-        502: _error("The LLM provider returned an error", "The LLM provider returned an error"),
-        503: _error("The LLM API key is not configured", "LLM API key is not configured"),
-        504: _error("The LLM provider did not respond in time", "The LLM provider did not respond in time"),
-        **RESPUESTA_422,
-    },
-)
-def consultar_ai(
-    consulta: AIConsulta = Body(
-        ...,
-        openapi_examples={
-            "cot_with_rag": {
-                "summary": "Chain-of-thought with RAG",
-                "value": {"pregunta": "¿Cuánto cuestan en total 2 laptops y 3 mouse?", "tecnica": "cot", "usar_rag": True},
-            },
-            "few_shot": {
-                "summary": "Few-shot with RAG",
-                "value": {"pregunta": "¿Venden tablets?", "tecnica": "few-shot", "usar_rag": True},
-            },
-            "zero_shot_no_rag": {
-                "summary": "Zero-shot without RAG (baseline)",
-                "value": {"pregunta": "¿Cuál es el producto más barato?", "tecnica": "zero-shot", "usar_rag": False},
-            },
-        },
-    ),
-    llm: GeminiClient = Depends(get_llm_client),
-):
-    contexto = recuperar_productos(consulta.pregunta, list(productos_db.values())) if consulta.usar_rag else []
-    prompt = construir_prompt(consulta.tecnica, consulta.pregunta, contexto)
-    base = {"pregunta": consulta.pregunta, "tecnica": consulta.tecnica, "usar_rag": consulta.usar_rag, "prompt": prompt}
-    try:
-        resultado = llm.generar(prompt)
-    except LLMError as exc:
-        registrar_llamada({**base, "error": type(exc).__name__})
-        logger.error(f"POST /api/v1/ai - {type(exc).__name__}")
-        raise HTTPException(status_code=exc.status_code, detail=exc.detalle)
-    registrar_llamada({**base, **resultado})
-    logger.info(f"POST /api/v1/ai - OK ({consulta.tecnica}, rag={consulta.usar_rag})")
-    return AIRespuesta(
-        tecnica=consulta.tecnica,
-        usar_rag=consulta.usar_rag,
-        productos_contexto=[p.id for p in contexto],
-        **resultado,
-    )
+app.state.producto_service = ProductoService(MemoriaProductoRepository(productos_db))
+app.mount("/swagger-static", StaticFiles(directory=swagger_ui_path), name="swagger-static")     

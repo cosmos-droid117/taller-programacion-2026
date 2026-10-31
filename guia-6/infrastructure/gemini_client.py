@@ -1,42 +1,22 @@
-import json
 import os
 import time
-from datetime import datetime, timezone
-from typing import Optional
+from typing import Dict, Optional
 
 import requests
 
+from domain.exceptions import LLMError, LLMRateLimit, LLMSinClave, LLMTimeout
+from domain.ports import LLMPort
+
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-RUTA_LOG = os.getenv("LLM_LOG_PATH", "llamadas_llm.jsonl")
 
 
-class LLMError(Exception):
-    status_code = 502
-    detalle = "The LLM provider returned an error"
-
-
-class LLMTimeout(LLMError):
-    status_code = 504
-    detalle = "The LLM provider did not respond in time"
-
-
-class LLMRateLimit(LLMError):
-    status_code = 429
-    detalle = "LLM rate limit reached, try again later"
-
-
-class LLMSinClave(LLMError):
-    status_code = 503
-    detalle = "LLM API key is not configured"
-
-
-class GeminiClient:
+class GeminiClient(LLMPort):
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, timeout: float = 20.0):
         self.api_key = api_key if api_key is not None else os.getenv("GEMINI_API_KEY")
         self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         self.timeout = timeout
 
-    def generar(self, prompt: str) -> dict:
+    def generar(self, prompt: str) -> Dict:
         if not self.api_key:
             raise LLMSinClave()
         inicio = time.perf_counter()
@@ -70,10 +50,3 @@ class GeminiClient:
             "tokens_razonamiento": uso.get("thoughtsTokenCount", 0),
             "latencia_ms": round((time.perf_counter() - inicio) * 1000, 1),
         }
-
-
-def registrar_llamada(registro: dict) -> None:
-    """Agrega una línea al archivo .jsonl (evidencia y base para estimar costos)."""
-    registro = {"fecha": datetime.now(timezone.utc).isoformat(), **registro}
-    with open(RUTA_LOG, "a", encoding="utf-8") as f:
-        f.write(json.dumps(registro, ensure_ascii=False) + "\n")    
