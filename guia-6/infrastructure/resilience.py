@@ -41,6 +41,7 @@ class CircuitBreaker:
             if self._reloj() - self._abierto_en >= self.enfriamiento:
                 self._cambiar(Estado.HALF_OPEN)
             else:
+                logger.warning(f"[CircuitBreaker:{self.nombre}] llamada rechazada: circuito OPEN")
                 raise CircuitOpenError(f"Circuito abierto para {self.nombre}")
         try:
             resultado = fn(*args, **kwargs)
