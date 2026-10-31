@@ -5,3 +5,5 @@ swagger-ui-bundle==1.1.0
 requests==2.32.3
 httpx
 openapi-spec-validator
+duckdb
+pandas

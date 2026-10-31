@@ -41,3 +41,13 @@ class DatosAbiertosPort(ABC):
 
     @abstractmethod
     def obtener_registros(self, limite: Optional[int] = None) -> List[Dict[str, Any]]: ...
+
+class AnaliticaPort(ABC):
+    """Contrato para calcular estadísticas descriptivas sobre registros de una fuente."""
+
+    @abstractmethod
+    def estadisticas(self, registros: List[Dict[str, Any]], columna: str) -> Dict[str, Any]: ...
+
+    @abstractmethod
+    def por_grupo(self, registros: List[Dict[str, Any]], columna_grupo: str,
+                  columna_numerica: Optional[str] = None) -> List[Dict[str, Any]]: ...
