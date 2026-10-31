@@ -1,5 +1,4 @@
 from pydantic import BaseModel, ConfigDict, Field
-from observability.logging_config import logger
 
 class ProductoBase(BaseModel):
     """Common fields to create or update a product."""

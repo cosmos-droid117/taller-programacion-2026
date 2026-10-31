@@ -1,4 +1,4 @@
-from observability.logging_config import logger
+
 class DominioError(Exception):
     """Base de los errores de negocio. No conoce HTTP: la capa api los traduce."""
 
@@ -28,3 +28,11 @@ class LLMRateLimit(LLMError):
 
 class LLMSinClave(LLMError):
     """No hay API key configurada."""
+
+
+class FuenteDatosNoDisponible(DominioError):
+    """Una API externa de datos abiertos no respondió (agotó reintentos o su circuito está abierto)."""
+
+    def __init__(self, fuente: str):
+        super().__init__(f"La fuente de datos '{fuente}' no está disponible")
+        self.fuente = fuente

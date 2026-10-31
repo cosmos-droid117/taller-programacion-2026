@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
-from observability.logging_config import logger
 from domain.entities import Producto
 
 
@@ -35,3 +34,10 @@ class LlamadaLogPort(ABC):
 
     @abstractmethod
     def registrar(self, registro: Dict[str, Any]) -> None: ...
+
+
+class DatosAbiertosPort(ABC):
+    """Contrato para obtener registros de una fuente externa de datos abiertos."""
+
+    @abstractmethod
+    def obtener_registros(self, limite: Optional[int] = None) -> List[Dict[str, Any]]: ...
