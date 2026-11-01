@@ -43,25 +43,26 @@ Este proyecto corresponde al desarrollo de la **Guía 6 (Sesiones 11 y 12, PDA 2
 
 ## 📂 Estructura del Proyecto (`guia-6/`)
 
+```text
 guia-6/
-├── main.py                    # Composition root: elige las implementaciones concretas
-├── domain/                    # Núcleo: entidades, excepciones y puertos (sin dependencias externas)
-├── application/               # Casos de uso: ProductoService, AIService, AnalisisService, RAG
-├── api/                       # Capa HTTP: rutas, esquemas, manejadores de error, docs y observabilidad
-├── infrastructure/            # Adaptadores: repositorio, Gemini, JSONL, SECOP II, DIVIPOLA, DuckDB, resiliencia
-├── observability/             # Logs y métricas (transversal)
-├── docs/adr/                  # Architecture Decision Record (en inglés)
-├── tests/                     # Suite de pruebas automatizadas
-├── demo_resiliencia.py        # Evidencia: circuit breaker y reintentos (fallos simulados)
-├── demo_apis.py               # Evidencia: respuesta real de las 2 APIs
-├── demo_analisis.py           # Evidencia: consultas DuckDB sobre datos reales
-├── llamadas_prompting.py      # Script de automatización para pruebas de prompting
-├── pruebas_fallas.py          # Script de pruebas de fallas
-├── llamadas_llm.jsonl         # Auditoría y registro histórico de llamadas al LLM
-├── resultados_prompting.json  # Métricas detalladas de latencia, tokens y respuestas
-├── pytest.ini                 # Configuración de pytest
-└── requirements.txt           # Dependencias del proyecto
-
+├── main.py                      # Raíz de composición (elige las implementaciones)
+├── domain/                      # Entidades, excepciones y puertos
+├── application/                 # Casos de uso y servicios
+├── api/                         # Rutas HTTP, esquemas y manejadores de error
+├── infrastructure/              # Adaptadores: repositorio, Gemini, APIs, DuckDB
+├── observability/               # Logs y métricas (transversal)
+├── docs/adr/                    # ADR en inglés
+├── tests/                       # Suite de pruebas
+├── demo_resiliencia.py          # Evidencia: circuit breaker y reintentos
+├── demo_apis.py                 # Evidencia: respuesta real de las 2 APIs
+├── demo_analisis.py             # Evidencia: consultas DuckDB
+├── llamadas_prompting.py        # Pruebas de prompting
+├── pruebas_fallas.py            # Pruebas de fallas
+├── llamadas_llm.jsonl           # Registro de llamadas al LLM
+├── resultados_prompting.json    # Métricas de latencia y tokens
+├── pytest.ini                   # Configuración de pytest
+└── requirements.txt             # Dependencias
+```
 ---
 
 ## 🧱 Arquitectura Hexagonal
