@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Bancario Web</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --surface-color: #1a1a1e;
+            --border-color: #2a2a30;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --error-bg: #2b1616;
+            --error-text: #f87171;
+            --success-bg: #132219;
+            --success-text: #4ade80;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin: 20px 0 10px 0;
+        }
+
+        section {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 6px 0 14px 0;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 10px 16px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .error, .success {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        .success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 8px;
+            text-align: left;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        td {
+            color: var(--text-main);
+        }
+
+        .empty-row {
+            color: var(--text-muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sistema Bancario Web</h1>
+        <section>
+            <h2>Crear Cuenta</h2>
+            <form id="formCrear">
+                <input type="text" id="crearNumero" placeholder="Número de cuenta (ej. 101)" required>
+                <input type="text" id="crearTitular" placeholder="Nombre del titular" required>
+                <input type="number" id="crearSaldo" placeholder="Saldo inicial" step="0.01" min="0" required>
+                <button type="submit">Crear Cuenta</button>
+            </form>
+            <div id="msgCrear" style="display:none;"></div>
+        </section>
+        <section>
+            <h2>Depositar Dinero</h2>
+            <form id="formDepositar">
+                <input type="text" id="depNumero" placeholder="Número de cuenta" required>
+                <input type="number" id="depMonto" placeholder="Monto a depositar" step="0.01" min="0.01" required>
+                <button type="submit">Realizar Depósito</button>
+            </form>
+            <div id="msgDepositar" style="display:none;"></div>
+        </section>
+        <section>
+            <h2>Retirar Dinero</h2>
+            <form id="formRetirar">
+                <input type="text" id="retNumero" placeholder="Número de cuenta" required>
+                <input type="number" id="retMonto" placeholder="Monto a retirar" step="0.01" min="0.01" required>
+                <button type="submit">Realizar Retiro</button>
+            </form>
+            <div id="msgRetirar" style="display:none;"></div>
+        </section>
+        <section>
+            <h2>Consultar Cuenta</h2>
+            <form id="formConsultar">
+                <input type="text" id="conNumero" placeholder="Número de cuenta" required>
+                <button type="submit">Consultar</button>
+            </form>
+            <div id="resConsulta" style="display:none;"></div>
+            
+            <h3>Historial de Movimientos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Tipo</th>
+                        <th>Monto</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaMovimientos">
+                    <tr><td colspan="3" class="empty-row">Ingrese una cuenta para ver los movimientos</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        class Cuenta {
+            constructor(numero, titular, saldoInicial) {
+                this.numero = numero;
+                this.titular = titular;
+                this.saldo = 0;
+                this.movimientos = [];
+                
+                saldoInicial = parseFloat(saldoInicial);
+                if (saldoInicial > 0) {
+                    this.saldo = saldoInicial;
+                    this.movimientos.push({
+                        fecha: new Date().toLocaleString(),
+                        tipo: "Apertura",
+                        monto: saldoInicial
+                    });
+                }
+            }
+
+            depositar(monto) {
+                monto = parseFloat(monto);
+                if (monto <= 0) {
+                    throw new Error("El monto del depósito debe ser mayor a cero.");
+                }
+                this.saldo += monto;
+                this.movimientos.push({
+                    fecha: new Date().toLocaleString(),
+                    tipo: "Depósito",
+                    monto: monto
+                });
+            }
+
+            retirar(monto) {
+                monto = parseFloat(monto);
+                if (monto <= 0) {
+                    throw new Error("El monto del retiro debe ser mayor a cero.");
+                }
+                if (monto > this.saldo) {
+                    throw new Error("Fondos insuficientes para realizar el retiro.");
+                }
+                this.saldo -= monto;
+                this.movimientos.push({
+                    fecha: new Date().toLocaleString(),
+                    tipo: "Retiro",
+                    monto: monto
+                });
+            }
+
+            consultarSaldo() {
+                return this.saldo;
+            }
+        }
+
+        // --- CLASE BANCO ---
+        class Banco {
+            constructor() {
+                this.cuentas = [];
+                this.cargarLocalStorage();
+            }
+
+            crearCuenta(numero, titular, saldoInicial) {
+                if (!titular || titular.trim() === "") {
+                    throw new Error("El titular no puede estar vacío.");
+                }
+                saldoInicial = parseFloat(saldoInicial);
+                if (saldoInicial < 0) {
+                    throw new Error("El saldo inicial no puede ser negativo.");
+                }
+                if (this.buscarCuenta(numero)) {
+                    throw new Error("El número de cuenta ya existe. Debe ser único.");
+                }
+
+                const nuevaCuenta = new Cuenta(numero, titular, saldoInicial);
+                this.cuentas.push(nuevaCuenta);
+                this.guardarLocalStorage();
+                return nuevaCuenta;
+            }
+
+            buscarCuenta(numero) {
+                return this.cuentas.find(c => c.numero === numero);
+            }
+
+            guardarLocalStorage() {
+                localStorage.setItem("cuentasBancarias", JSON.stringify(this.cuentas));
+            }
+
+            cargarLocalStorage() {
+                const datos = localStorage.getItem("cuentasBancarias");
+                if (datos) {
+                    const arrayPlano = JSON.parse(datos);
+                    this.cuentas = arrayPlano.map(obj => {
+                        let c = new Cuenta(obj.numero, obj.titular, 0);
+                        c.saldo = obj.saldo;
+                        c.movimientos = obj.movimientos || [];
+                        return c;
+                    });
+                }
+            }
+        }
+        const banco = new Banco();
+
+        function mostrarMensaje(elementoId, texto, esError = false) {
+            const el = document.getElementById(elementoId);
+            el.style.display = "block";
+            el.className = esError ? "error" : "success";
+            el.innerText = texto;
+        }
+
+        function actualizarVistaMovimientos(cuenta) {
+            const numConsultado = document.getElementById("conNumero").value.trim();
+            if (numConsultado === cuenta.numero) {
+                const resConsulta = document.getElementById("resConsulta");
+                resConsulta.style.display = "block";
+                resConsulta.innerHTML = `
+                    <strong>Titular:</strong> ${cuenta.titular} &nbsp;|&nbsp; 
+                    <strong>Saldo Actual:</strong> $${cuenta.consultarSaldo().toFixed(2)}
+                `;
+                resConsulta.className = "success";
+
+                const tbody = document.getElementById("tablaMovimientos");
+                tbody.innerHTML = "";
+                if (cuenta.movimientos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="empty-row">No hay movimientos registrados.</td></tr>`;
+                } else {
+                    cuenta.movimientos.forEach(mov => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${mov.fecha}</td>
+                                <td>${mov.tipo}</td>
+                                <td>$${mov.monto.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+        }
+        document.getElementById("formCrear").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const num = document.getElementById("crearNumero").value.trim();
+            const tit = document.getElementById("crearTitular").value.trim();
+            const sal = document.getElementById("crearSaldo").value;
+
+            try {
+                banco.crearCuenta(num, tit, sal);
+                mostrarMensaje("msgCrear", `Cuenta ${num} creada exitosamente para ${tit}.`);
+                document.getElementById("formCrear").reset();
+            } catch (error) {
+                mostrarMensaje("msgCrear", error.message, true);
+            }
+        });
+        document.getElementById("formDepositar").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const num = document.getElementById("depNumero").value.trim();
+            const monto = document.getElementById("depMonto").value;
+
+            try {
+                const cuenta = banco.buscarCuenta(num);
+                if (!cuenta) throw new Error("La cuenta no existe.");
+                cuenta.depositar(monto);
+                banco.guardarLocalStorage();
+                mostrarMensaje("msgDepositar", `Depósito exitoso. Nuevo saldo: $${cuenta.consultarSaldo().toFixed(2)}`);
+                actualizarVistaMovimientos(cuenta);
+                document.getElementById("formDepositar").reset();
+            } catch (error) {
+                mostrarMensaje("msgDepositar", error.message, true);
+            }
+        });
+        document.getElementById("formRetirar").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const num = document.getElementById("retNumero").value.trim();
+            const monto = document.getElementById("retMonto").value;
+
+            try {
+                const cuenta = banco.buscarCuenta(num);
+                if (!cuenta) throw new Error("La cuenta no existe.");
+                cuenta.retirar(monto);
+                banco.guardarLocalStorage();
+                mostrarMensaje("msgRetirar", `Retiro exitoso. Nuevo saldo: $${cuenta.consultarSaldo().toFixed(2)}`);
+                actualizarVistaMovimientos(cuenta);
+                document.getElementById("formRetirar").reset();
+            } catch (error) {
+                mostrarMensaje("msgRetirar", error.message, true);
+            }
+        });
+        document.getElementById("formConsultar").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const num = document.getElementById("conNumero").value.trim();
+            const tbody = document.getElementById("tablaMovimientos");
+            const resConsulta = document.getElementById("resConsulta");
+            
+            try {
+                const cuenta = banco.buscarCuenta(num);
+                if (!cuenta) throw new Error("La cuenta no existe.");
+
+                actualizarVistaMovimientos(cuenta);
+            } catch (error) {
+                resConsulta.style.display = "block";
+                resConsulta.innerText = error.message;
+                resConsulta.className = "error";
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-row">Sin datos</td></tr>`;
+            }
+        });
+    </script>
+</body>
+</html>
